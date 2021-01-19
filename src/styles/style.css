@@ -1,0 +1,28 @@
+* {
+    box-sizing: border-box;
+}
+body {
+    background-image: url('../assets/tableMat.jpg');
+    background-repeat: repeat;
+}
+
+#gameBoard {
+    width: 100vw;
+    height: 100vh;
+    padding: 15px;
+    position: relative;
+}
+
+[data-card] {
+    width: calc(100px * 1.5);
+    height: calc(153px * 1.5);
+    background-size: 100%;
+    float: left;
+}
+
+[data-card] {
+    transition: left 500ms ease-in-out, top 500ms ease-in-out;
+    position: absolute;
+    left: calc(50% - 75px);
+    top: calc(-153px * 1.5);
+}
