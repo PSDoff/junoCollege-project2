@@ -6,7 +6,7 @@ const blackjack = {};
 blackjack.baseApiUrl = 'https://deckofcardsapi.com/api/deck';
 blackjack.cardImagePath = './src/assets/cards';
 blackjack.numPlayers = 4;
-blackjack.cardSpread = '30px';
+blackjack.cardSpread = 40; // in px
 
 blackjack.players = {
     // South
@@ -87,6 +87,9 @@ blackjack.animateDeal = (cardsToDeal, dealDirections) => {
                     blackjack.players.dealer.cardsInHand++;
                 }
             }, i * 200);
+
+            // Wait until the deal animations are done, then spread the cards
+            setTimeout(() => {blackjack.spreadCards(); console.log('wheeee')}, cardsToDeal.length * 300);
         })
     }
 }
@@ -113,6 +116,25 @@ blackjack.getDecks = async (numDecks) => {
     .then(res => res.json())
     // Stores the response data in the blackjack object
     .then(data => blackjack.deck = data);
+}
+
+blackjack.spreadCards = () => {
+    const cardsInPlay = document.querySelectorAll('.card');
+
+    cardsInPlay.forEach((card, i) => {
+        const cardLeft = parseInt(getComputedStyle(card).left);
+        const viewportWidth = window.innerWidth;
+
+        // TODO: Make this useful for when a hand has more than 2 cards
+        // Modulo w/ numPlayers/ number of times around board? Figure out the logic.
+        if (i >= 4) {
+            if (viewportWidth - cardLeft < 300) {
+                card.style.left = `${cardLeft - blackjack.cardSpread}px`;
+            } else {
+                card.style.left = `${cardLeft + blackjack.cardSpread}px`;
+            }
+        }
+    })
 }
 
 // EVENTS //
