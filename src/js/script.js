@@ -49,14 +49,19 @@ blackjack.deck = {};
 //     })
 // }
 
-blackjack.dealCards = (cardsToDeal, playerToDeal) => {
-    cardsToDeal.forEach((card, i) => {
-        console.log({card});
-        console.log({i})
-    })
+// dealDirections:
+//// 'fromDealer' - Will distribute 1 card to each player, starting computer1, until no more drawn cards remain
+//// '${playerId} - Distributes drawn card(s) to 1 player until no more drawn cards remain ['computer1', 'player', 'computer2', 'dealer']
+blackjack.dealCards = (cardsToDeal, dealDirections) => {
+    if (dealDirections === 'fromDealer') {
+        cardsToDeal.forEach((card, i) => {
+            console.log({card});
+            console.log({i})
+        })
+    }
 }
 
-blackjack.animateDeal = (cardsToDeal, playerToDeal) => {
+blackjack.animateDeal = (cardsToDeal) => {
 
     cardsToDeal.forEach((cardEl, i) => {
 
@@ -83,7 +88,6 @@ blackjack.animateDeal = (cardsToDeal, playerToDeal) => {
                 cardEl.style.left = blackjack.players.dealer.boardPos.left;
                 cardEl.style.top = blackjack.players.dealer.boardPos.top;
             }
-
         }, i * 500);
     })
 }
@@ -95,7 +99,9 @@ blackjack.drawCards = async cardCount => {
     })
     .then(res => res.json())
     .then(data => blackjack.cardsDrawn = data.cards)
-    .then(data => blackjack.dealCards(data.cards, ['computer1', 'player', 'computer2', 'dealer']));
+    .then(data => {
+        blackjack.dealCards(data, 'all');
+    })
 }
 
 blackjack.getDecks = async (numDecks) => {
