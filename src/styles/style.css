@@ -1,6 +1,8 @@
 * {
     box-sizing: border-box;
+    font-family: 'Open Sans', sans-serif;
 }
+
 body {
     background-image: url('../assets/tableMat.jpg');
     background-repeat: repeat;
@@ -25,4 +27,13 @@ body {
     position: absolute;
     left: calc(50% - 75px);
     top: calc(-153px * 1.5);
+}
+
+[data-deal-btn] {
+    padding: 10px;
+    display: inline-block;
+    background: #000;
+    color: #fff;
+    cursor: pointer;
+    border-radius: 10px;
 }

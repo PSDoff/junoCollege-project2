@@ -52,13 +52,17 @@ blackjack.deck = {};
 // dealDirections:
 //// 'fromDealer' - Will distribute 1 card to each player, starting computer1, until no more drawn cards remain
 //// '${playerId} - Distributes drawn card(s) to 1 player until no more drawn cards remain ['computer1', 'player', 'computer2', 'dealer']
-blackjack.dealCards = (cardsToDeal, dealDirections) => {
+blackjack.dealCards = (cardsToDraw, dealDirections) => {
+    let cardHolder = document.querySelector('#cardHolder');
+
     if (dealDirections === 'fromDealer') {
-        cardsToDeal.forEach((card, i) => {
-            console.log({card});
-            console.log({i})
+        cardsToDraw.forEach((card, i) => {
+            let cardHtml = `<div class="card" data-card="${card.code}" style="background-image: url('./src/assets/cards/${card.code}.png')"></div>`
+            cardHolder.innerHTML += cardHtml;
         })
     }
+
+    blackjack.animateDeal(cardHolder.querySelectorAll('.card'));
 }
 
 blackjack.animateDeal = (cardsToDeal) => {
@@ -100,7 +104,7 @@ blackjack.drawCards = async cardCount => {
     .then(res => res.json())
     .then(data => blackjack.cardsDrawn = data.cards)
     .then(data => {
-        blackjack.dealCards(data, 'all');
+        blackjack.dealCards(data, 'fromDealer');
     })
 }
 
@@ -127,9 +131,16 @@ blackjack.delayLoop = (fn, delay) => {
 
 blackjack.init = () => {
     blackjack.deck = blackjack.getDecks(6);
-    // blackjack.animateDeal();
 }
+
+document.addEventListener('click', (e) => {
+    if (!e.target.matches('[data-deal-btn]')) return;
+    
+    // Initial draw/deal, 2 cards per player
+    // TODO: Make number of players editable
+    blackjack.drawCards(blackjack.numPlayers * 2, 'fromDealer');
+});
 
 document.addEventListener('DOMContentLoaded', () => {
     blackjack.init();
-})
+}, false);
