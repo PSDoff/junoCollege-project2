@@ -29,8 +29,22 @@ body {
     top: calc(-153px * 1.5);
 }
 
+#deck {
+    position: absolute;
+    width: calc(100px * 1.5);
+    height: calc(153px * 1.5);
+    left: calc(50% - ((100px * 1.5) / 2));
+    top: calc(50% - ((153px * 1.5) / 2));
+}
+
+#deck img {
+    width: 100%;
+    height: auto;
+}
+
 [data-deal-btn] {
     padding: 10px;
+    background: #fff;
     display: inline-block;
     background: #000;
     color: #fff;
