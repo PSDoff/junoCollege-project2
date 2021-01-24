@@ -2,6 +2,21 @@
 // Shuffle/GET 6 decks
 const blackjack = {};
 
+// TODO:
+// Due to time restraints and life obligations, I'm unable to take this project further than where it is
+// Things to do would be to add blackjack rule logic, as well as some simple computer AI (if less than 16, hit) that varies slightly from player to player
+// https://bicyclecards.com/how-to-play/blackjack/
+
+// INTERACTIONS:
+// "DEAL" button, deals the initial round of cards, 2 cards to each player entity, starting with the position clockwise of the dealer
+//// Once all cards are in there default location, they animate to spread for visibility
+
+// "HIT" button, draws 1 (one) new card from the current deck and deals it to the Player
+//// Respread Player cards once the new card is in Player hand
+
+// "RESHUFFLE" button, clears all cards in play, creating a new deck out of 6 decks (6 * 52 cards)
+//// From here, players can re-DEAL
+
 // FIXME:
 // Uncaught (in promise) SyntaxError: JSON.parse: unexpected character at line 1 column 1 of the JSON data
 // The above error gets thrown every now and then. Assumption is it's from one particular type of card, but thinking it's API side.
