@@ -2,6 +2,10 @@
 // Shuffle/GET 6 decks
 const blackjack = {};
 
+// FIXME:
+// Uncaught (in promise) SyntaxError: JSON.parse: unexpected character at line 1 column 1 of the JSON data
+// The above error gets thrown every now and then. Assumption is it's from one particular type of card, but thinking it's API side.
+
 // CONFIG
 blackjack.baseApiUrl = 'https://deckofcardsapi.com/api/deck';
 blackjack.cardImagePath = './src/assets/cards';
@@ -49,49 +53,73 @@ blackjack.deck = {};
 //// 'allFromDealer' - Will distribute 1 card to each player, starting computer1, until no more drawn cards remain
 //// '${playerId} - Distributes drawn card(s) to 1 player until no more drawn cards remain ['computer1', 'player', 'computer2', 'dealer']
 blackjack.dealCards = (cardsToDraw, dealDirections) => {
-    let cardHolder = document.querySelector('#cardHolder');
+    let cardsToDealContainer = document.querySelector('#cardsToDeal');
     
     cardsToDraw.forEach((card, i) => {
         let cardHtml = `<div class="card" data-card="${card.code}" style="background-image: url('./src/assets/cards/${card.code}.png')"></div>`
-        cardHolder.innerHTML += cardHtml;
+        cardsToDealContainer.innerHTML += cardHtml;
     })
 
-    blackjack.animateDeal(cardHolder.querySelectorAll('.card'), dealDirections);
+    blackjack.animateDeal(cardsToDealContainer.querySelectorAll('#cardsToDeal .card'), dealDirections);
 }
 
 blackjack.animateDeal = (cardsToDeal, dealDirections) => {
-    if (dealDirections === 'allFromDealer') {
-    
-        cardsToDeal.forEach((cardEl, i) => {
+    const cardsToDealContainer = document.querySelector('#cardsToDeal');
+    const cardHolderContainer = document.querySelector('#cardHolder');
+
+    cardsToDeal.forEach((cardEl, i) => {
+        if (dealDirections === 'allFromDealer') {
             // Players - Dealt from left of dealer, CW
             setTimeout(() => {
+                // This whole thing needs to be refactored to not rely this sort of static logic
                 // Comp1
                 if (i % blackjack.numPlayers === 0) {
                     cardEl.style.left = blackjack.players.computer1.boardPos.left;
                     cardEl.style.top = blackjack.players.computer1.boardPos.top;
                     blackjack.players.computer1.cardsInHand++;
+                    // TODO: Refactor to apply data-belongs-to value during card HTML creation
+                    cardEl.setAttribute('data-belongs-to', 'computer1');
                 // Player
                 } else if (i % blackjack.numPlayers === 1) {
                     cardEl.style.left = blackjack.players.player.boardPos.left;
                     cardEl.style.top = blackjack.players.player.boardPos.top;
                     blackjack.players.player.cardsInHand++;
+                    // TODO: Refactor to apply data-belongs-to value during card HTML creation
+                    cardEl.setAttribute('data-belongs-to', 'player');
                 // Comp2
                 } else if (i % blackjack.numPlayers === 2) {
                     cardEl.style.left = blackjack.players.computer2.boardPos.left;
                     cardEl.style.top = blackjack.players.computer2.boardPos.top;
                     blackjack.players.computer2.cardsInHand++;
+                    // TODO: Refactor to apply data-belongs-to value during card HTML creation
+                    cardEl.setAttribute('data-belongs-to', 'computer2');
                 // Dealer
                 } else if (i % blackjack.numPlayers === 3) {
                     cardEl.style.left = blackjack.players.dealer.boardPos.left;
                     cardEl.style.top = blackjack.players.dealer.boardPos.top;
                     blackjack.players.dealer.cardsInHand++;
+                    // TODO: Refactor to apply data-belongs-to value during card HTML creation
+                    cardEl.setAttribute('data-belongs-to', 'dealer');
                 }
             }, i * 200);
-
+            
             // Wait until the deal animations are done, then spread the cards
-            setTimeout(() => {blackjack.spreadCards(); console.log('wheeee')}, cardsToDeal.length * 300);
-        })
-    }
+            // Need different logic for individual card deals
+            setTimeout(() => blackjack.spreadCards(), cardsToDeal.length * 300);
+        } else {
+            cardEl.style.left = blackjack.players[dealDirections].boardPos.left;
+            cardEl.style.top = blackjack.players[dealDirections].boardPos.top;
+            blackjack.players[dealDirections].cardsInHand++;
+            cardEl.setAttribute('data-belongs-to', dealDirections);
+            blackjack.spreadCards(dealDirections);
+        }
+
+        // Move dealt cards to #cardHolder
+        while (cardsToDealContainer.childNodes.length > 0) {
+            cardHolderContainer.appendChild(cardsToDealContainer.childNodes[0]);
+        }
+
+    })
 }
 
 blackjack.drawCards = async (cardCount, dealDirections) => {
@@ -118,40 +146,104 @@ blackjack.getDecks = async (numDecks) => {
     .then(data => blackjack.deck = data);
 }
 
-blackjack.spreadCards = () => {
-    const cardsInPlay = document.querySelectorAll('.card');
+blackjack.spreadCards = (handToSpread) => {
+    let cardsToSpread;
+    const viewportWidth = window.innerWidth;
+    
+    // For single card deal respreads
+    if (handToSpread) {
+        cardsToSpread = document.querySelectorAll(`[data-belongs-to="${handToSpread}"]`);
+        // Animate back to default position before doing the spread animation
+        cardsToSpread.forEach(card => {
+            card.style.left = `${blackjack.players[handToSpread].boardPos.left}`    
+        })
+        
+        setTimeout(() => {
+            cardsToSpread.forEach((card, i) => {
+                console.log(cardsToSpread)
+                const cardLeft = parseInt(getComputedStyle(card).left);
 
-    cardsInPlay.forEach((card, i) => {
-        const cardLeft = parseInt(getComputedStyle(card).left);
-        const viewportWidth = window.innerWidth;
+                if (viewportWidth - cardLeft < 300) {
+                    card.style.left = `${cardLeft - blackjack.cardSpread * i}px`;
+                } else {
+                    card.style.left = `${cardLeft + blackjack.cardSpread * i}px`;
+                    // I don't know why these weren't being collected into cardsToSpread in DOM order
+                    // But they weren't and it was causing the cards to cover each other up
+                    // so... z-index additions it is.
+                    card.style.zIndex = i;
+                    console.log(card.style.left);
+                }
 
-        // TODO: Make this useful for when a hand has more than 2 cards
-        // Modulo w/ numPlayers/ number of times around board? Figure out the logic.
-        if (i >= 4) {
-            if (viewportWidth - cardLeft < 300) {
-                card.style.left = `${cardLeft - blackjack.cardSpread}px`;
-            } else {
-                card.style.left = `${cardLeft + blackjack.cardSpread}px`;
+            })
+        }, 500);
+    } else {
+        cardsToSpread = document.querySelectorAll('.card');
+        // For mass card spreads
+        cardsToSpread.forEach((card, i) => {
+            const cardLeft = parseInt(getComputedStyle(card).left);
+    
+            // TODO: Make this useful for when a hand has more than 2 cards
+            // Modulo w/ numPlayers/ number of times around board? Figure out the logic.
+            if (i >= 4) {
+                if (viewportWidth - cardLeft < 300) {
+                    card.style.left = `${cardLeft - blackjack.cardSpread}px`;
+                } else {
+                    card.style.left = `${cardLeft + blackjack.cardSpread}px`;
+                }
             }
-        }
-    })
+        })
+    }
+    
 }
 
-// EVENTS //
-// Initial Deal button, uses deck_id generated at page load
-document.addEventListener('click', (e) => {
-    if (!e.target.matches('[data-deal-btn]')) return;
-    
-    // Initial draw/deal, 2 cards per player
-    // TODO: Make number of players editable
-    // FIXME: Beginning of animation is wonky. First card jumps to end spot. Why?
-    blackjack.drawCards(blackjack.numPlayers * 2, 'allFromDealer');
-});
+blackjack.reshuffle = () => {
+    // Remove all cards from the board
+    const cardsInPlayContainer = document.getElementById('cardHolder');
 
-blackjack.init = () => {
+    // According to generalist performance, it's faster to check for the first item of a list
+    // but faster to REMOVE the last child
+    // I found this info via the interwebs and blindly implemented it so... take it with a grain of salt.
+    while (cardsInPlayContainer.firstChild) {
+        cardsInPlayContainer.removeChild(cardsInPlayContainer.lastChild);
+    }
+
+    // This should provide a new value under blackjack.deck.deck_id
     blackjack.deck = blackjack.getDecks(6);
 }
 
+// EVENTS //
+// TODO: Disable event listeners according to when buttons should be allowed to be clicked
+//          Reshuffle and Hit should not be enabled until initial deal
+blackjack.events = () => {
+    // Initial Deal button, uses deck_id generated at page load
+    document.addEventListener('click', e => {
+        if (!e.target.matches('[data-deal-btn]')) return;
+        
+        // Initial draw/deal, 2 cards per player
+        // TODO: Make number of players editable
+        // FIXME: Beginning of animation is wonky. First card jumps to end spot. Why?
+        blackjack.drawCards(blackjack.numPlayers * 2, 'allFromDealer');
+    });
+
+    // Deal an individual card to the player entity
+    document.addEventListener('click', e => {
+        if (!e.target.matches('[data-hit-btn]')) return;
+
+        blackjack.drawCards(1, 'player');
+    })
+
+    // Clear cards and get new deck for "Reshuffle"
+    document.addEventListener('click', e => {
+        if (!e.target.matches('[data-reshuffle-btn')) return;
+
+        blackjack.reshuffle();
+    })
+}
+
+blackjack.init = () => {
+    blackjack.deck = blackjack.getDecks(6);
+    blackjack.events();
+}
 
 document.addEventListener('DOMContentLoaded', () => {
     blackjack.init();
